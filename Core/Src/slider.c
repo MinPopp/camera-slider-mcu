@@ -1,8 +1,6 @@
 #include "slider.h"
-// #include "stepper.h"
+#include "stepper.h"
 #include "cmsis_os.h"
-#include "main.h"
-#include <string.h>
 
 static SliderState state = SLIDER_STATE_IDLE;
 static SliderErrorCode error_code = SLIDER_ERROR_NONE;
@@ -25,7 +23,7 @@ void Slider_Init(void)
 {
     osSemaphoreWait(motionSemHandle, 0);
 
-    // Stepper_Init();
+    Stepper_Init();
 
     state = SLIDER_STATE_IDLE;
     homed = false;
@@ -37,7 +35,7 @@ SliderStatus Slider_GetStatus(void)
     osMutexWait(sliderMutexHandle, osWaitForever);
     status.state = state;
     status.error_code = error_code;
-    status.position = 0; // status.position = Stepper_GetPosition();
+    status.position = Stepper_GetPosition();
     status.homed = homed;
     osMutexRelease(sliderMutexHandle);
     return status;
@@ -101,7 +99,7 @@ void Slider_Run()
         stop_requested = false;
         if (state == SLIDER_STATE_MOVING || state == SLIDER_STATE_HOMING)
         {
-            // Stepper_Stop();
+            Stepper_Stop();
         }
     }
 
@@ -115,14 +113,14 @@ void Slider_Run()
             homed = false;
             error_code = SLIDER_ERROR_NONE;
 
-            // StepperMoveParams params = {
-            //     .steps = -100000,
-            //     .max_speed = 1000,
-            //     .acceleration = STEPPER_DEFAULT_ACCEL,
-            //     .on_complete = OnMotionComplete
-            // };
+            StepperMoveParams params = {
+                .steps = -100000,
+                .max_speed = 1000,
+                .acceleration = STEPPER_DEFAULT_ACCEL,
+                .on_complete = OnMotionComplete
+            };
             motion_complete = false;
-            // Stepper_StartMove(&params);
+            Stepper_StartMove(&params);
         }
         else if (motion_requested)
         {
@@ -130,14 +128,14 @@ void Slider_Run()
             state = SLIDER_STATE_MOVING;
             error_code = SLIDER_ERROR_NONE;
 
-            // StepperMoveParams params = {
-            //     .steps = pending_steps,
-            //     .max_speed = pending_speed,
-            //     .acceleration = STEPPER_DEFAULT_ACCEL,
-            //     .on_complete = OnMotionComplete
-            // };
+            StepperMoveParams params = {
+                .steps = pending_steps,
+                .max_speed = pending_speed,
+                .acceleration = STEPPER_DEFAULT_ACCEL,
+                .on_complete = OnMotionComplete
+            };
             motion_complete = false;
-            // Stepper_StartMove(&params);
+            Stepper_StartMove(&params);
         }
         break;
 
@@ -145,7 +143,7 @@ void Slider_Run()
         if (motion_complete)
         {
             motion_complete = false;
-            // Stepper_SetPosition(0);
+            Stepper_SetPosition(0);
             homed = true;
             state = SLIDER_STATE_IDLE;
         }
