@@ -22,6 +22,7 @@
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
+#include "slider.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -135,7 +136,7 @@ void StartSliderTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    Slider_Run();
   }
   /* USER CODE END StartSliderTask */
 }
