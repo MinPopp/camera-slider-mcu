@@ -47,6 +47,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Core/Src/slider.c
     Core/Src/stepper.c
+    Core/Src/command_parser.c
 )
 
 # Add include paths

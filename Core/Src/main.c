@@ -19,12 +19,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "command_parser.h"
 #include "slider.h"
 /* USER CODE END Includes */
 
@@ -59,6 +61,8 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+extern char rxBuffer[RX_BUFFER_SIZE];
+
 /* USER CODE END 0 */
 
 /**
@@ -90,9 +94,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  Slider_Init();
+  CommandParser_Init();
+
+  HAL_UART_Receive_DMA(&huart1, (uint8_t*)rxBuffer, RX_BUFFER_SIZE);
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
 
   /* USER CODE END 2 */
 
@@ -147,7 +159,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 16;
+  RCC_OscInitStruct.PLL.PLLN = 40;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
@@ -165,7 +177,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -176,6 +188,11 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+// {
+//   CommandParser_RxCallback(huart);
+// }
 
 /* USER CODE END 4 */
 

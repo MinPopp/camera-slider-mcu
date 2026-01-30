@@ -20,8 +20,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32l4xx_it.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "cmsis_os.h"
+#include "command_parser.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,14 +54,18 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN EV */
+
+extern char rxBuffer[RX_BUFFER_SIZE];
+extern osMessageQId cmdRxQueueHandle;
 
 /* USER CODE END EV */
 
@@ -161,6 +168,20 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles DMA1 channel5 global interrupt.
+  */
+void DMA1_Channel5_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel5_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel5_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+  /* USER CODE BEGIN DMA1_Channel5_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel5_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM2 global interrupt.
   */
 void TIM2_IRQHandler(void)
@@ -172,6 +193,39 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
   /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART1 global interrupt.
+  */
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
+
+  if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_IDLE))
+  {
+    __HAL_UART_CLEAR_IDLEFLAG(&huart1);
+
+    // Stop DMA to freeze NDTR
+    HAL_UART_DMAStop(&huart1);
+
+    uint16_t dma_counter = __HAL_DMA_GET_COUNTER(huart1.hdmarx);;
+    uint16_t received = RX_BUFFER_SIZE - dma_counter;
+
+    // Push received bytes into the queue
+    for (uint16_t i = 0; i < received; i++)
+    {
+      osMessagePut(cmdRxQueueHandle, rxBuffer[i], 0);
+    }
+
+    // Restart DMA
+    HAL_UART_Receive_DMA(&huart1, (uint8_t*)rxBuffer, RX_BUFFER_SIZE);
+  }
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
 }
 
 /**

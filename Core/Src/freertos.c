@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "command_parser.h"
 #include "slider.h"
 
 /* USER CODE END Includes */
@@ -50,6 +51,8 @@
 
 /* USER CODE END Variables */
 osThreadId sliderTaskHandle;
+osThreadId cmdParseTaskHandle;
+osMessageQId cmdRxQueueHandle;
 osMutexId sliderMutexHandle;
 osSemaphoreId motionSemHandle;
 
@@ -59,6 +62,7 @@ osSemaphoreId motionSemHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartSliderTask(void const * argument);
+void StartCmdParseTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -109,6 +113,11 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* definition and creation of cmdRxQueue */
+  osMessageQDef(cmdRxQueue, 64, uint16_t);
+  cmdRxQueueHandle = osMessageCreate(osMessageQ(cmdRxQueue), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -117,6 +126,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of sliderTask */
   osThreadDef(sliderTask, StartSliderTask, osPriorityNormal, 0, 512);
   sliderTaskHandle = osThreadCreate(osThread(sliderTask), NULL);
+
+  /* definition and creation of cmdParseTask */
+  osThreadDef(cmdParseTask, StartCmdParseTask, osPriorityAboveNormal, 0, 256);
+  cmdParseTaskHandle = osThreadCreate(osThread(cmdParseTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -140,6 +153,25 @@ void StartSliderTask(void const * argument)
     Slider_Run();
   }
   /* USER CODE END StartSliderTask */
+}
+
+/* USER CODE BEGIN Header_StartCmdParseTask */
+/**
+* @brief Function implementing the cmdParseTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartCmdParseTask */
+void StartCmdParseTask(void const * argument)
+{
+  /* USER CODE BEGIN StartCmdParseTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    CommandParser_Run();
+    osDelay(10);
+  }
+  /* USER CODE END StartCmdParseTask */
 }
 
 /* Private application code --------------------------------------------------*/
