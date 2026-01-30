@@ -66,6 +66,7 @@ extern TIM_HandleTypeDef htim6;
 
 extern char rxBuffer[RX_BUFFER_SIZE];
 extern osMessageQId cmdRxQueueHandle;
+extern TIM_HandleTypeDef htim2;
 
 /* USER CODE END EV */
 

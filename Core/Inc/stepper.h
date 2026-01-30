@@ -33,7 +33,7 @@ int32_t Stepper_GetPosition(void);
 void Stepper_SetPosition(int32_t position);
 
 bool Stepper_StartMove(const StepperMoveParams* params);
-void Stepper_Stop(void);
+void Stepper_Stop(bool faststop);
 
 void Stepper_TimerISR(void);
 

@@ -1,6 +1,7 @@
 #include "slider.h"
 #include "stepper.h"
 #include "cmsis_os.h"
+#include "main.h"
 
 static SliderState state = SLIDER_STATE_IDLE;
 static SliderErrorCode error_code = SLIDER_ERROR_NONE;
@@ -99,7 +100,7 @@ void Slider_Run()
         stop_requested = false;
         if (state == SLIDER_STATE_MOVING || state == SLIDER_STATE_HOMING)
         {
-            Stepper_Stop();
+            Stepper_Stop(false);
         }
     }
 
@@ -114,10 +115,10 @@ void Slider_Run()
             error_code = SLIDER_ERROR_NONE;
 
             StepperMoveParams params = {
-                .steps = -100000,
+                .steps = 100000,
                 .max_speed = STEPPER_HOME_SPEED,
                 .acceleration = STEPPER_DEFAULT_ACCEL,
-                .on_complete = OnMotionComplete
+                .on_complete = OnMotionComplete,
             };
             motion_complete = false;
             Stepper_StartMove(&params);
@@ -140,12 +141,13 @@ void Slider_Run()
         break;
 
     case SLIDER_STATE_HOMING:
-        if (motion_complete)
+        if (motion_complete || HAL_GPIO_ReadPin(end_switch_GPIO_Port, end_switch_Pin) == GPIO_PIN_RESET)
         {
-            motion_complete = false;
-            Stepper_SetPosition(0);
+            Stepper_Stop(true);
             homed = true;
+            motion_complete = true;
             state = SLIDER_STATE_IDLE;
+            Stepper_SetPosition(0); //note: this needs to be after setting the new state
         }
         break;
 
@@ -171,5 +173,4 @@ void Slider_Run()
     {
         osDelay(10);
     }
-
 }

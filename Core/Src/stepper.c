@@ -94,10 +94,7 @@ int32_t Stepper_GetPosition(void)
 
 void Stepper_SetPosition(int32_t position)
 {
-    if (!Stepper_IsRunning())
-    {
-        state.position = position;
-    }
+    state.position = position;
 }
 
 bool Stepper_StartMove(const StepperMoveParams* params)
@@ -143,8 +140,19 @@ bool Stepper_StartMove(const StepperMoveParams* params)
     return true;
 }
 
-void Stepper_Stop(void)
+void Stepper_Stop(bool faststop)
 {
+    if (faststop)
+    {
+        Timer_Stop();
+        state.phase = PHASE_IDLE;
+        if (state.callback)
+        {
+            state.callback(false, state.position);
+        }
+    }
+
+    //regular acceleration or deceleration
     if (state.phase != PHASE_IDLE)
     {
         if (state.phase != PHASE_DECEL && state.current_speed > STEPPER_MIN_SPEED)

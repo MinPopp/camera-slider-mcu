@@ -65,6 +65,8 @@ void Error_Handler(void);
 #define VCP_TX_GPIO_Port GPIOA
 #define Mot1_step_Pin GPIO_PIN_3
 #define Mot1_step_GPIO_Port GPIOA
+#define end_switch_Pin GPIO_PIN_4
+#define end_switch_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
