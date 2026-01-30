@@ -115,7 +115,7 @@ void Slider_Run()
 
             StepperMoveParams params = {
                 .steps = -100000,
-                .max_speed = 1000,
+                .max_speed = STEPPER_HOME_SPEED,
                 .acceleration = STEPPER_DEFAULT_ACCEL,
                 .on_complete = OnMotionComplete
             };
