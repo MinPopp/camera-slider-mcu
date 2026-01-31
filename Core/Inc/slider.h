@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define SLIDER_RAIL_LENGTH_STEPS    80000
+
 typedef enum {
     SLIDER_STATE_IDLE,
     SLIDER_STATE_MOVING,
@@ -17,7 +19,8 @@ typedef enum {
     SLIDER_OK,
     SLIDER_ERR_BUSY,
     SLIDER_ERR_NOT_HOMED,
-    SLIDER_ERR_INVALID_PARAM
+    SLIDER_ERR_INVALID_PARAM,
+    SLIDER_ERR_OUT_OF_BOUNDS
 } SliderResult;
 
 typedef enum {

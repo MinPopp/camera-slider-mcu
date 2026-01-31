@@ -72,6 +72,18 @@ SliderResult Slider_Move(int32_t steps, uint32_t speed)
         osMutexRelease(sliderMutexHandle);
         return SLIDER_ERR_BUSY;
     }
+
+    if (homed)
+    {
+        int32_t current_pos = Stepper_GetPosition();
+        int32_t target_pos = current_pos + steps;
+        if (target_pos < 0 || target_pos > SLIDER_RAIL_LENGTH_STEPS)
+        {
+            osMutexRelease(sliderMutexHandle);
+            return SLIDER_ERR_OUT_OF_BOUNDS;
+        }
+    }
+
     pending_steps = steps;
     pending_speed = speed;
     motion_requested = true;
