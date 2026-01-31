@@ -49,6 +49,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/stepper.c
     Core/Src/command_parser.c
     Core/Src/tmc2209.c
+    Core/Src/startup_sound.c
 )
 
 # Add include paths

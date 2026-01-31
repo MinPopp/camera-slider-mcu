@@ -101,7 +101,7 @@ TMC2209_Result TMC2209_ReadRegister(uint8_t reg, uint32_t* value)
     return TMC2209_OK;
 }
 
-static uint8_t MicrostepsToMRES(uint8_t microsteps)
+static uint8_t MicrostepsToMRES(uint16_t microsteps)
 {
     switch (microsteps)
     {
@@ -160,7 +160,7 @@ TMC2209_Result TMC2209_Configure(const TMC2209_Config* config)
 TMC2209_Result TMC2209_ConfigureDefaults(void)
 {
     TMC2209_Config config = {
-        .microsteps = 16,
+        .microsteps = 8,
         .spreadcycle = false,
         .current = {
             .ihold = 8,
@@ -239,4 +239,60 @@ bool TMC2209_IsConnected(void)
     }
 
     return (ifcnt2 != ifcnt1);
+}
+
+TMC2209_Result TMC2209_ConfigureForSound(void)
+{
+    TMC2209_Result result;
+
+    uint32_t gconf = TMC2209_GCONF_PDN_DISABLE |
+                     TMC2209_GCONF_MSTEP_REG_SELECT |
+                     TMC2209_GCONF_EN_SPREADCYCLE;
+    result = TMC2209_WriteRegister(TMC2209_REG_GCONF, gconf);
+    if (result != TMC2209_OK) return result;
+
+    uint32_t ihold_irun = 0;
+    ihold_irun |= (16 & 0x1F);
+    ihold_irun |= ((24 & 0x1F) << 8);
+    ihold_irun |= ((6 & 0x0F) << 16);
+    result = TMC2209_WriteRegister(TMC2209_REG_IHOLD_IRUN, ihold_irun);
+    if (result != TMC2209_OK) return result;
+
+    uint32_t chopconf = 0x10000053;
+    chopconf &= ~(0x0F << 24);
+    chopconf |= TMC2209_CHOPCONF_MRES_1;
+    chopconf &= ~TMC2209_CHOPCONF_INTPOL;
+    result = TMC2209_WriteRegister(TMC2209_REG_CHOPCONF, chopconf);
+    if (result != TMC2209_OK) return result;
+
+    return TMC2209_OK;
+}
+
+TMC2209_Result TMC2209_ConfigureForMotion(void)
+{
+    TMC2209_Result result;
+
+    uint32_t gconf = TMC2209_GCONF_PDN_DISABLE | TMC2209_GCONF_MSTEP_REG_SELECT;
+    result = TMC2209_WriteRegister(TMC2209_REG_GCONF, gconf);
+    if (result != TMC2209_OK) return result;
+
+    uint32_t ihold_irun = 0;
+    ihold_irun |= (8 & 0x1F);
+    ihold_irun |= ((20 & 0x1F) << 8);
+    ihold_irun |= ((6 & 0x0F) << 16);
+    result = TMC2209_WriteRegister(TMC2209_REG_IHOLD_IRUN, ihold_irun);
+    if (result != TMC2209_OK) return result;
+
+    uint32_t chopconf = 0x10000053;
+    chopconf &= ~(0x0F << 24);
+    chopconf |= (5 << 24);
+    chopconf |= TMC2209_CHOPCONF_INTPOL;
+    result = TMC2209_WriteRegister(TMC2209_REG_CHOPCONF, chopconf);
+    if (result != TMC2209_OK) return result;
+
+    uint32_t pwmconf = 0xC10D0024;
+    result = TMC2209_WriteRegister(TMC2209_REG_PWMCONF, pwmconf);
+    if (result != TMC2209_OK) return result;
+
+    return TMC2209_OK;
 }

@@ -41,6 +41,7 @@
 #define TMC2209_CHOPCONF_MRES_4         (6 << TMC2209_CHOPCONF_MRES_SHIFT)
 #define TMC2209_CHOPCONF_MRES_2         (7 << TMC2209_CHOPCONF_MRES_SHIFT)
 #define TMC2209_CHOPCONF_MRES_1         (8 << TMC2209_CHOPCONF_MRES_SHIFT)
+#define TMC2209_CHOPCONF_INTPOL         (1 << 28)
 
 typedef enum {
     TMC2209_OK = 0,
@@ -56,7 +57,7 @@ typedef struct {
 } TMC2209_CurrentConfig;
 
 typedef struct {
-    uint8_t microsteps;
+    uint16_t microsteps;
     bool spreadcycle;
     TMC2209_CurrentConfig current;
     uint8_t tpowerdown;
@@ -77,5 +78,8 @@ TMC2209_Result TMC2209_SetSpreadCycle(bool enable);
 
 TMC2209_Result TMC2209_ReadDriverStatus(uint32_t* status);
 bool TMC2209_IsConnected(void);
+
+TMC2209_Result TMC2209_ConfigureForSound(void);
+TMC2209_Result TMC2209_ConfigureForMotion(void);
 
 #endif

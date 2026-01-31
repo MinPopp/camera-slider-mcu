@@ -29,6 +29,7 @@
 #include "command_parser.h"
 #include "slider.h"
 #include "tmc2209.h"
+#include "startup_sound.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,7 +103,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   TMC2209_Init(&huart2);
-  TMC2209_ConfigureDefaults();
+  StartupSound_Play();
 
   Slider_Init();
   CommandParser_Init();
