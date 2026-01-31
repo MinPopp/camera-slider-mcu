@@ -9,6 +9,7 @@ typedef enum {
     SLIDER_STATE_IDLE,
     SLIDER_STATE_MOVING,
     SLIDER_STATE_HOMING,
+    SLIDER_STATE_CONFIGURING,
     SLIDER_STATE_ERROR
 } SliderState;
 
@@ -23,7 +24,8 @@ typedef enum {
     SLIDER_ERROR_NONE = 0,
     SLIDER_ERROR_ENDSTOP_NOT_FOUND = 10,
     SLIDER_ERROR_LIMIT_REACHED = 20,
-    SLIDER_ERROR_MOVE_TIMEOUT = 21
+    SLIDER_ERROR_MOVE_TIMEOUT = 21,
+    SLIDER_ERROR_DRIVER_COMM = 30
 } SliderErrorCode;
 
 typedef struct {
@@ -41,5 +43,8 @@ SliderStatus Slider_GetStatus(void);
 SliderResult Slider_Home(void);
 SliderResult Slider_Move(int32_t steps, uint32_t speed);
 SliderResult Slider_Stop(void);
+
+SliderResult Slider_ConfigureDriver(void);
+bool Slider_IsDriverConfigured(void);
 
 #endif

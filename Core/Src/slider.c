@@ -1,17 +1,20 @@
 #include "slider.h"
 #include "stepper.h"
+#include "tmc2209.h"
 #include "cmsis_os.h"
 #include "main.h"
 
 static SliderState state = SLIDER_STATE_IDLE;
 static SliderErrorCode error_code = SLIDER_ERROR_NONE;
 static bool homed = false;
+static bool driver_configured = false;
 
 static int32_t pending_steps = 0;
 static uint32_t pending_speed = 0;
 static volatile bool motion_requested = false;
 static volatile bool home_requested = false;
 static volatile bool stop_requested = false;
+static volatile bool config_requested = false;
 static volatile bool motion_complete = false;
 static volatile bool motion_success = false;
 
@@ -28,6 +31,7 @@ void Slider_Init(void)
 
     state = SLIDER_STATE_IDLE;
     homed = false;
+    driver_configured = false;
 }
 
 SliderStatus Slider_GetStatus(void)
@@ -83,6 +87,24 @@ SliderResult Slider_Stop(void)
     return SLIDER_OK;
 }
 
+SliderResult Slider_ConfigureDriver(void)
+{
+    osMutexWait(sliderMutexHandle, osWaitForever);
+    if (state != SLIDER_STATE_IDLE)
+    {
+        osMutexRelease(sliderMutexHandle);
+        return SLIDER_ERR_BUSY;
+    }
+    config_requested = true;
+    osMutexRelease(sliderMutexHandle);
+    return SLIDER_OK;
+}
+
+bool Slider_IsDriverConfigured(void)
+{
+    return driver_configured;
+}
+
 static void OnMotionComplete(bool completed, int32_t position)
 {
     (void)position;
@@ -123,6 +145,12 @@ void Slider_Run()
             motion_complete = false;
             Stepper_StartMove(&params);
         }
+        else if (config_requested)
+        {
+            config_requested = false;
+            state = SLIDER_STATE_CONFIGURING;
+            error_code = SLIDER_ERROR_NONE;
+        }
         else if (motion_requested)
         {
             motion_requested = false;
@@ -137,6 +165,25 @@ void Slider_Run()
             };
             motion_complete = false;
             Stepper_StartMove(&params);
+        }
+        break;
+
+    case SLIDER_STATE_CONFIGURING:
+        {
+            osMutexRelease(sliderMutexHandle);
+            TMC2209_Result result = TMC2209_ConfigureDefaults();
+            osMutexWait(sliderMutexHandle, osWaitForever);
+
+            if (result == TMC2209_OK)
+            {
+                driver_configured = true;
+                state = SLIDER_STATE_IDLE;
+            }
+            else
+            {
+                error_code = SLIDER_ERROR_DRIVER_COMM;
+                state = SLIDER_STATE_ERROR;
+            }
         }
         break;
 
