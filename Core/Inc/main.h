@@ -61,18 +61,18 @@ void Error_Handler(void);
 #define MCO_GPIO_Port GPIOA
 #define Mot1_dir_Pin GPIO_PIN_1
 #define Mot1_dir_GPIO_Port GPIOA
-#define VCP_TX_Pin GPIO_PIN_2
-#define VCP_TX_GPIO_Port GPIOA
-#define Mot1_step_Pin GPIO_PIN_3
-#define Mot1_step_GPIO_Port GPIOA
 #define end_switch_Pin GPIO_PIN_4
 #define end_switch_GPIO_Port GPIOA
+#define Mot1_step_Pin GPIO_PIN_7
+#define Mot1_step_GPIO_Port GPIOA
+#define Mot2_dir_Pin GPIO_PIN_9
+#define Mot2_dir_GPIO_Port GPIOA
+#define Mot2_step_Pin GPIO_PIN_10
+#define Mot2_step_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
 #define SWCLK_GPIO_Port GPIOA
-#define VCP_RX_Pin GPIO_PIN_15
-#define VCP_RX_GPIO_Port GPIOA
 #define LD3_Pin GPIO_PIN_3
 #define LD3_GPIO_Port GPIOB
 
