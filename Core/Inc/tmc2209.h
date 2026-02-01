@@ -47,7 +47,8 @@ typedef enum {
     TMC2209_OK = 0,
     TMC2209_ERR_TIMEOUT,
     TMC2209_ERR_CRC,
-    TMC2209_ERR_COMM
+    TMC2209_ERR_COMM,
+    TMC2209_ERR_DATA
 } TMC2209_Result;
 
 typedef struct {
@@ -63,6 +64,21 @@ typedef struct {
     uint8_t tpowerdown;
     uint32_t tpwmthrs;
 } TMC2209_Config;
+
+typedef struct {
+    uint32_t gconf;
+    uint32_t gstat;
+    uint32_t ifcnt;
+    uint32_t ioin;
+    uint32_t tstep;
+    uint32_t sg_result;
+    uint32_t mscnt;
+    uint32_t mscuract;
+    uint32_t chopconf;
+    uint32_t drvstatus;
+    uint32_t pwmconf;
+    TMC2209_Result last_error;
+} TMC2209_RegisterDump;
 
 void TMC2209_Init(UART_HandleTypeDef* huart);
 
@@ -81,5 +97,7 @@ bool TMC2209_IsConnected(void);
 
 TMC2209_Result TMC2209_ConfigureForSound(void);
 TMC2209_Result TMC2209_ConfigureForMotion(void);
+
+TMC2209_Result TMC2209_ReadAllRegisters(TMC2209_RegisterDump* dump);
 
 #endif

@@ -93,6 +93,11 @@ TMC2209_Result TMC2209_ReadRegister(uint8_t reg, uint32_t* value)
         return TMC2209_ERR_CRC;
     }
 
+    if (rx_buf[1] != 0xFF || rx_buf[2] != reg)
+    {
+        return TMC2209_ERR_DATA;
+    }
+
     *value = ((uint32_t)rx_buf[3] << 24) |
              ((uint32_t)rx_buf[4] << 16) |
              ((uint32_t)rx_buf[5] << 8) |
@@ -293,6 +298,49 @@ TMC2209_Result TMC2209_ConfigureForMotion(void)
     uint32_t pwmconf = 0xC10D0024;
     result = TMC2209_WriteRegister(TMC2209_REG_PWMCONF, pwmconf);
     if (result != TMC2209_OK) return result;
+
+    return TMC2209_OK;
+}
+
+TMC2209_Result TMC2209_ReadAllRegisters(TMC2209_RegisterDump* dump)
+{
+    if (dump == NULL) return TMC2209_ERR_COMM;
+
+    memset(dump, 0, sizeof(TMC2209_RegisterDump));
+    TMC2209_Result result;
+
+    result = TMC2209_ReadRegister(TMC2209_REG_GCONF, &dump->gconf);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_GSTAT, &dump->gstat);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_IFCNT, &dump->ifcnt);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_IOIN, &dump->ioin);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_TSTEP, &dump->tstep);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_SG_RESULT, &dump->sg_result);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_MSCNT, &dump->mscnt);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_MSCURACT, &dump->mscuract);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_CHOPCONF, &dump->chopconf);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_DRVSTATUS, &dump->drvstatus);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
+
+    result = TMC2209_ReadRegister(TMC2209_REG_PWMCONF, &dump->pwmconf);
+    if (result != TMC2209_OK) { dump->last_error = result; return result; }
 
     return TMC2209_OK;
 }
