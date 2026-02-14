@@ -15,8 +15,8 @@
 
 #define STEPPER_DEFAULT_ACCEL   600U
 #define STEPPER_HOME_SPEED      500
-#define STEPPER_MIN_SPEED       50U
-#define STEPPER_MAX_SPEED       5000U
+#define STEPPER_MIN_SPEED       10U
+#define STEPPER_MAX_SPEED       3000U
 
 typedef void (*StepperCallback)(bool completed, int32_t position);
 
