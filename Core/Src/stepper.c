@@ -22,6 +22,7 @@ static volatile struct {
 
     int32_t accel_steps;
     int32_t decel_start;
+    uint32_t decel_entry_speed;
 
     bool direction;
     StepPhase phase;
@@ -159,6 +160,7 @@ void Stepper_Stop(bool faststop)
         {
             uint32_t decel_steps = CalcDecelSteps(state.current_speed, state.accel);
             state.decel_start = state.steps_done;
+            state.decel_entry_speed = state.current_speed;
             state.target_steps = state.steps_done + decel_steps;
             state.steps_to_go = decel_steps;
             state.phase = PHASE_DECEL;
@@ -226,6 +228,7 @@ void Stepper_TimerISR(void)
         }
         else if (state.steps_done >= state.decel_start)
         {
+            state.decel_entry_speed = state.current_speed;
             state.phase = PHASE_DECEL;
         }
         break;
@@ -233,6 +236,7 @@ void Stepper_TimerISR(void)
     case PHASE_CRUISE:
         if (state.steps_done >= state.decel_start)
         {
+            state.decel_entry_speed = state.current_speed;
             state.phase = PHASE_DECEL;
         }
         break;
@@ -240,7 +244,7 @@ void Stepper_TimerISR(void)
     case PHASE_DECEL:
         {
             int32_t decel_step = state.steps_done - state.decel_start;
-            uint32_t speed_sq = (uint32_t)state.max_speed * state.max_speed;
+            uint32_t speed_sq = (uint32_t)state.decel_entry_speed * state.decel_entry_speed;
             uint32_t reduction = 2ULL * state.accel * decel_step;
             
             if (reduction >= speed_sq)
