@@ -175,7 +175,7 @@ static void HandleHome(void)
 static void HandleMove(const char* args)
 {
     int32_t steps = 0;
-    int32_t speed = 500;
+    int32_t speed;
 
     const char* stepsPtr = strstr(args, "STEPS=");
     const char* speedPtr = strstr(args, "SPEED=");
@@ -191,6 +191,10 @@ static void HandleMove(const char* args)
     if (speedPtr != NULL)
     {
         speed = atoi(speedPtr + 6);
+    }
+    else
+    {
+        speed = (int32_t)Slider_GetMotionParams().speed;
     }
 
     if (speed <= 0)
