@@ -33,6 +33,11 @@ typedef struct {
     bool homed;
 } SliderStatus;
 
+typedef struct {
+    uint32_t speed;
+    uint32_t acceleration;
+} SliderMotionParams;
+
 void Slider_Init(void);
 void Slider_Task(void const* argument);
 
@@ -41,5 +46,8 @@ SliderStatus Slider_GetStatus(void);
 SliderResult Slider_Home(void);
 SliderResult Slider_Move(int32_t steps, uint32_t speed);
 SliderResult Slider_Stop(void);
+
+SliderResult Slider_SetMotionParams(uint32_t *speed, uint32_t *acceleration);
+SliderMotionParams Slider_GetMotionParams(void);
 
 #endif

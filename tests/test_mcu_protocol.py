@@ -139,6 +139,64 @@ class TestUnknownCommand:
         assert response == "OK"
 
 
+class TestSetParam:
+    def test_setparam_speed_only(self, serial_port):
+        response = send_command(serial_port, "SETPARAM SPEED=1000")
+        assert response.startswith("OK")
+        assert "SPEED=1000" in response
+        assert "ACCEL=" in response
+
+    def test_setparam_accel_only(self, serial_port):
+        response = send_command(serial_port, "SETPARAM ACCEL=800")
+        assert response.startswith("OK")
+        assert "SPEED=" in response
+        assert "ACCEL=800" in response
+
+    def test_setparam_both(self, serial_port):
+        response = send_command(serial_port, "SETPARAM SPEED=1500 ACCEL=900")
+        assert response.startswith("OK")
+        assert "SPEED=1500" in response
+        assert "ACCEL=900" in response
+
+    def test_setparam_no_params_returns_error(self, serial_port):
+        response = send_command(serial_port, "SETPARAM")
+        assert response.startswith("ERROR")
+
+    def test_setparam_zero_speed_returns_error(self, serial_port):
+        response = send_command(serial_port, "SETPARAM SPEED=0")
+        assert response.startswith("ERROR")
+
+    def test_setparam_zero_accel_returns_error(self, serial_port):
+        response = send_command(serial_port, "SETPARAM ACCEL=0")
+        assert response.startswith("ERROR")
+
+    def test_setparam_speed_below_min_returns_error(self, serial_port):
+        response = send_command(serial_port, "SETPARAM SPEED=10")
+        assert response.startswith("ERROR")
+
+    def test_setparam_speed_above_max_returns_error(self, serial_port):
+        response = send_command(serial_port, "SETPARAM SPEED=10000")
+        assert response.startswith("ERROR")
+
+
+class TestGetParam:
+    def test_getparam_returns_speed_and_accel(self, serial_port):
+        response = send_command(serial_port, "GETPARAM")
+        assert response.startswith("OK")
+        assert "SPEED=" in response
+        assert "ACCEL=" in response
+        speed_match = re.search(r"SPEED=(\d+)", response)
+        accel_match = re.search(r"ACCEL=(\d+)", response)
+        assert speed_match is not None
+        assert accel_match is not None
+
+    def test_getparam_reflects_setparam(self, serial_port):
+        send_command(serial_port, "SETPARAM SPEED=2000 ACCEL=1200")
+        response = send_command(serial_port, "GETPARAM")
+        assert "SPEED=2000" in response
+        assert "ACCEL=1200" in response
+
+
 class TestSequence:
     """Test command sequences to verify state transitions."""
 

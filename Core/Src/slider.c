@@ -7,6 +7,9 @@ static SliderState state = SLIDER_STATE_IDLE;
 static SliderErrorCode error_code = SLIDER_ERROR_NONE;
 static bool homed = false;
 
+static uint32_t configured_speed = STEPPER_HOME_SPEED;
+static uint32_t configured_accel = STEPPER_DEFAULT_ACCEL;
+
 static int32_t pending_steps = 0;
 static uint32_t pending_speed = 0;
 static volatile bool motion_requested = false;
@@ -132,7 +135,7 @@ void Slider_Run()
             StepperMoveParams params = {
                 .steps = pending_steps,
                 .max_speed = pending_speed,
-                .acceleration = STEPPER_DEFAULT_ACCEL,
+                .acceleration = configured_accel,
                 .on_complete = OnMotionComplete
             };
             motion_complete = false;
@@ -173,4 +176,42 @@ void Slider_Run()
     {
         osDelay(10);
     }
+}
+
+SliderResult Slider_SetMotionParams(uint32_t *speed, uint32_t *acceleration)
+{
+    osMutexWait(sliderMutexHandle, osWaitForever);
+
+    if (speed != NULL)
+    {
+        if (*speed < STEPPER_MIN_SPEED || *speed > STEPPER_MAX_SPEED)
+        {
+            osMutexRelease(sliderMutexHandle);
+            return SLIDER_ERR_INVALID_PARAM;
+        }
+        configured_speed = *speed;
+    }
+
+    if (acceleration != NULL)
+    {
+        if (*acceleration == 0)
+        {
+            osMutexRelease(sliderMutexHandle);
+            return SLIDER_ERR_INVALID_PARAM;
+        }
+        configured_accel = *acceleration;
+    }
+
+    osMutexRelease(sliderMutexHandle);
+    return SLIDER_OK;
+}
+
+SliderMotionParams Slider_GetMotionParams(void)
+{
+    SliderMotionParams params;
+    osMutexWait(sliderMutexHandle, osWaitForever);
+    params.speed = configured_speed;
+    params.acceleration = configured_accel;
+    osMutexRelease(sliderMutexHandle);
+    return params;
 }

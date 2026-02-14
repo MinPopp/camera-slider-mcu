@@ -1,5 +1,6 @@
 #include "command_parser.h"
 #include "slider.h"
+#include "stepper.h"
 #include "cmsis_os.h"
 #include <string.h>
 #include <stdio.h>
@@ -27,6 +28,8 @@ static void HandleHome(void);
 static void HandleMove(const char* args);
 static void HandleStop(void);
 static void HandleGetPos(void);
+static void HandleSetParam(const char* args);
+static void HandleGetParam(void);
 static void SendError(int code, const char* message);
 
 void CommandParser_Init(void)
@@ -98,6 +101,14 @@ static void ProcessCommand(const char* cmd)
     else if (strncmp(cmd, "GETPOS", 6) == 0 && (cmd[6] == '\0' || cmd[6] == ' '))
     {
         HandleGetPos();
+    }
+    else if (strncmp(cmd, "SETPARAM", 8) == 0 && (cmd[8] == ' ' || cmd[8] == '\0'))
+    {
+        HandleSetParam(cmd + 8);
+    }
+    else if (strncmp(cmd, "GETPARAM", 8) == 0 && (cmd[8] == '\0' || cmd[8] == ' '))
+    {
+        HandleGetParam();
     }
     else
     {
@@ -219,6 +230,68 @@ static void HandleGetPos(void)
 {
     SliderStatus status = Slider_GetStatus();
     snprintf(txBuffer, TX_BUFFER_SIZE, "OK POS=%ld\n", (long)status.position);
+    SendResponse(txBuffer);
+}
+
+static void HandleSetParam(const char* args)
+{
+    const char* speedPtr = strstr(args, "SPEED=");
+    const char* accelPtr = strstr(args, "ACCEL=");
+
+    if (speedPtr == NULL && accelPtr == NULL)
+    {
+        SendError(31, "INVALID_PARAM");
+        return;
+    }
+
+    uint32_t speed_val;
+    uint32_t accel_val;
+    uint32_t *speed_p = NULL;
+    uint32_t *accel_p = NULL;
+
+    if (speedPtr != NULL)
+    {
+        int32_t v = atoi(speedPtr + 6);
+        if (v <= 0)
+        {
+            SendError(31, "INVALID_PARAM");
+            return;
+        }
+        speed_val = (uint32_t)v;
+        speed_p = &speed_val;
+    }
+
+    if (accelPtr != NULL)
+    {
+        int32_t v = atoi(accelPtr + 6);
+        if (v <= 0)
+        {
+            SendError(31, "INVALID_PARAM");
+            return;
+        }
+        accel_val = (uint32_t)v;
+        accel_p = &accel_val;
+    }
+
+    SliderResult result = Slider_SetMotionParams(speed_p, accel_p);
+    if (result == SLIDER_OK)
+    {
+        SliderMotionParams params = Slider_GetMotionParams();
+        snprintf(txBuffer, TX_BUFFER_SIZE, "OK SPEED=%lu ACCEL=%lu\n",
+                 (unsigned long)params.speed, (unsigned long)params.acceleration);
+        SendResponse(txBuffer);
+    }
+    else
+    {
+        SendError(31, "INVALID_PARAM");
+    }
+}
+
+static void HandleGetParam(void)
+{
+    SliderMotionParams params = Slider_GetMotionParams();
+    snprintf(txBuffer, TX_BUFFER_SIZE, "OK SPEED=%lu ACCEL=%lu\n",
+             (unsigned long)params.speed, (unsigned long)params.acceleration);
     SendResponse(txBuffer);
 }
 
