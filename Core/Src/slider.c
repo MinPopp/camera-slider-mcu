@@ -1,11 +1,13 @@
 #include "slider.h"
 #include "stepper.h"
+#include "tmc2209.h"
 #include "cmsis_os.h"
 #include "main.h"
 
 static SliderState state = SLIDER_STATE_IDLE;
 static SliderErrorCode error_code = SLIDER_ERROR_NONE;
 static bool homed = false;
+static bool driver_configured = false;
 
 static uint32_t configured_speed = STEPPER_HOME_SPEED;
 static uint32_t configured_accel = STEPPER_DEFAULT_ACCEL;
@@ -15,6 +17,7 @@ static uint32_t pending_speed = 0;
 static volatile bool motion_requested = false;
 static volatile bool home_requested = false;
 static volatile bool stop_requested = false;
+static volatile bool config_requested = false;
 static volatile bool motion_complete = false;
 static volatile bool motion_success = false;
 
@@ -31,6 +34,7 @@ void Slider_Init(void)
 
     state = SLIDER_STATE_IDLE;
     homed = false;
+    driver_configured = false;
 }
 
 SliderStatus Slider_GetStatus(void)
@@ -71,6 +75,18 @@ SliderResult Slider_Move(int32_t steps, uint32_t speed)
         osMutexRelease(sliderMutexHandle);
         return SLIDER_ERR_BUSY;
     }
+
+    if (homed)
+    {
+        int32_t current_pos = Stepper_GetPosition();
+        int32_t target_pos = current_pos + steps;
+        if (target_pos < 0 || target_pos > SLIDER_RAIL_LENGTH_STEPS)
+        {
+            osMutexRelease(sliderMutexHandle);
+            return SLIDER_ERR_OUT_OF_BOUNDS;
+        }
+    }
+
     pending_steps = steps;
     pending_speed = speed;
     motion_requested = true;
@@ -84,6 +100,24 @@ SliderResult Slider_Stop(void)
     stop_requested = true;
     osMutexRelease(sliderMutexHandle);
     return SLIDER_OK;
+}
+
+SliderResult Slider_ConfigureDriver(void)
+{
+    osMutexWait(sliderMutexHandle, osWaitForever);
+    if (state != SLIDER_STATE_IDLE)
+    {
+        osMutexRelease(sliderMutexHandle);
+        return SLIDER_ERR_BUSY;
+    }
+    config_requested = true;
+    osMutexRelease(sliderMutexHandle);
+    return SLIDER_OK;
+}
+
+bool Slider_IsDriverConfigured(void)
+{
+    return driver_configured;
 }
 
 static void OnMotionComplete(bool completed, int32_t position)
@@ -118,13 +152,19 @@ void Slider_Run()
             error_code = SLIDER_ERROR_NONE;
 
             StepperMoveParams params = {
-                .steps = 100000,
+                .steps = -100000,
                 .max_speed = STEPPER_HOME_SPEED,
                 .acceleration = STEPPER_DEFAULT_ACCEL,
                 .on_complete = OnMotionComplete,
             };
             motion_complete = false;
             Stepper_StartMove(&params);
+        }
+        else if (config_requested)
+        {
+            config_requested = false;
+            state = SLIDER_STATE_CONFIGURING;
+            error_code = SLIDER_ERROR_NONE;
         }
         else if (motion_requested)
         {
@@ -140,6 +180,27 @@ void Slider_Run()
             };
             motion_complete = false;
             Stepper_StartMove(&params);
+        }
+        break;
+
+    case SLIDER_STATE_CONFIGURING:
+        {
+            osMutexRelease(sliderMutexHandle);
+            // TMC2209_Result result = TMC2209_ConfigureDefaults();
+            osMutexWait(sliderMutexHandle, osWaitForever);
+
+            driver_configured = true;
+            state = SLIDER_STATE_IDLE;
+            // if (result == TMC2209_OK)
+            // {
+            //     driver_configured = true;
+            //     state = SLIDER_STATE_IDLE;
+            // }
+            // else
+            // {
+            //     error_code = SLIDER_ERROR_DRIVER_COMM;
+            //     state = SLIDER_STATE_ERROR;
+            // }
         }
         break;
 

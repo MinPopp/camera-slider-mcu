@@ -28,6 +28,8 @@
 /* USER CODE BEGIN Includes */
 #include "command_parser.h"
 #include "slider.h"
+#include "tmc2209.h"
+#include "startup_sound.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,6 +101,17 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  TMC2209_Init(&huart2);
+  //
+  TMC2209_RegisterDump dump;
+  TMC2209_ReadAllRegisters(&dump);
+
+  // while (1)
+  // {
+  //
+  // }
+  // StartupSound_Play();
 
   Slider_Init();
   CommandParser_Init();
