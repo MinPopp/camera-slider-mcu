@@ -149,7 +149,7 @@ void Slider_Run()
             error_code = SLIDER_ERROR_NONE;
 
             StepperMoveParams params = {
-                .steps = 100000,
+                .steps = -100000,
                 .max_speed = STEPPER_HOME_SPEED,
                 .acceleration = STEPPER_DEFAULT_ACCEL,
                 .on_complete = OnMotionComplete,
@@ -183,19 +183,21 @@ void Slider_Run()
     case SLIDER_STATE_CONFIGURING:
         {
             osMutexRelease(sliderMutexHandle);
-            TMC2209_Result result = TMC2209_ConfigureDefaults();
+            // TMC2209_Result result = TMC2209_ConfigureDefaults();
             osMutexWait(sliderMutexHandle, osWaitForever);
 
-            if (result == TMC2209_OK)
-            {
-                driver_configured = true;
-                state = SLIDER_STATE_IDLE;
-            }
-            else
-            {
-                error_code = SLIDER_ERROR_DRIVER_COMM;
-                state = SLIDER_STATE_ERROR;
-            }
+            driver_configured = true;
+            state = SLIDER_STATE_IDLE;
+            // if (result == TMC2209_OK)
+            // {
+            //     driver_configured = true;
+            //     state = SLIDER_STATE_IDLE;
+            // }
+            // else
+            // {
+            //     error_code = SLIDER_ERROR_DRIVER_COMM;
+            //     state = SLIDER_STATE_ERROR;
+            // }
         }
         break;
 

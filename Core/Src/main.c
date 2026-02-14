@@ -103,7 +103,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   TMC2209_Init(&huart2);
-  StartupSound_Play();
+  //
+  TMC2209_RegisterDump dump;
+  TMC2209_ReadAllRegisters(&dump);
+
+  // while (1)
+  // {
+  //
+  // }
+  // StartupSound_Play();
 
   Slider_Init();
   CommandParser_Init();
