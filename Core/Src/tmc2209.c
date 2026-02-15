@@ -254,6 +254,7 @@ TMC2209_Result TMC2209_ConfigureForSound(void)
 {
     TMC2209_Result result;
 
+    // SpreadCycle mode for audible chopper noise
     uint32_t gconf = TMC2209_GCONF_PDN_DISABLE |
                      TMC2209_GCONF_MSTEP_REG_SELECT |
                      TMC2209_GCONF_EN_SPREADCYCLE;
@@ -261,18 +262,27 @@ TMC2209_Result TMC2209_ConfigureForSound(void)
     if (result != TMC2209_OK) return result;
     HAL_Delay(5);
 
-    uint32_t ihold_irun = 0;
-    ihold_irun |= (16 & 0x1F);
-    ihold_irun |= ((24 & 0x1F) << 8);
-    ihold_irun |= ((6 & 0x0F) << 16);
+    // Current settings (Rsense = 0.11 Ohm, vsense = 1 -> Vfs = 0.18V)
+    // Irms = (CS+1)/32 * Vfs / (Rsense + 0.02) * 1/sqrt(2)
+    // IRUN=10:  Irms = 11/32 * 0.18 / 0.13 * 0.707 = ~337 mA
+    // IHOLD=5:  Irms =  6/32 * 0.18 / 0.13 * 0.707 = ~184 mA
+    uint8_t ihold = 5;
+    uint8_t irun = 10;
+    uint8_t iholddelay = 6;
+    uint32_t ihold_irun = (ihold & 0x1F)
+                        | ((irun & 0x1F) << 8)
+                        | ((iholddelay & 0x0F) << 16);
     result = TMC2209_WriteRegister(TMC2209_REG_IHOLD_IRUN, ihold_irun);
     if (result != TMC2209_OK) return result;
     HAL_Delay(5);
 
-    uint32_t chopconf = 0x10000053;
-    chopconf &= ~(0x0F << 24);
-    chopconf |= TMC2209_CHOPCONF_MRES_1;
-    chopconf &= ~TMC2209_CHOPCONF_INTPOL;
+    // Chopper: TOFF=3, HSTRT=5, HEND=0, vsense=1 (low range), fullstep, no interpolation
+    uint32_t chopconf = 0;
+    chopconf |= (3 << 0);              // TOFF: off-time = 3
+    chopconf |= (5 << 4);              // HSTRT: hysteresis start = 5
+    chopconf |= (0 << 7);              // HEND: hysteresis end = 0
+    chopconf |= (1 << 17);             // vsense: 1 = low-range (Vfs = 0.18V)
+    chopconf |= TMC2209_CHOPCONF_MRES_1;  // fullstep for maximum audible effect
     result = TMC2209_WriteRegister(TMC2209_REG_CHOPCONF, chopconf);
     if (result != TMC2209_OK) return result;
 
@@ -283,28 +293,46 @@ TMC2209_Result TMC2209_ConfigureForMotion(void)
 {
     TMC2209_Result result;
 
+    // StealthChop mode for quiet motion (en_SpreadCycle = 0)
     uint32_t gconf = TMC2209_GCONF_PDN_DISABLE | TMC2209_GCONF_MSTEP_REG_SELECT;
     result = TMC2209_WriteRegister(TMC2209_REG_GCONF, gconf);
     if (result != TMC2209_OK) return result;
     HAL_Delay(5);
 
-    uint32_t ihold_irun = 0;
-    ihold_irun |= (8 & 0x1F);
-    ihold_irun |= ((20 & 0x1F) << 8);
-    ihold_irun |= ((6 & 0x0F) << 16);
+    // Current settings (Rsense = 0.11 Ohm, vsense = 0 -> Vfs = 0.32V)
+    // Irms = (CS+1)/32 * Vfs / (Rsense + 0.02) * 1/sqrt(2)
+    // IRUN=13:  Irms = 14/32 * 0.32 / 0.13 * 0.707 = ~761 mA
+    // IHOLD=8:  Irms =  9/32 * 0.32 / 0.13 * 0.707 = ~490 mA
+    uint8_t ihold = 8;
+    uint8_t irun = 13;
+    uint8_t iholddelay = 6;
+    uint32_t ihold_irun = (ihold & 0x1F)
+                        | ((irun & 0x1F) << 8)
+                        | ((iholddelay & 0x0F) << 16);
     result = TMC2209_WriteRegister(TMC2209_REG_IHOLD_IRUN, ihold_irun);
     if (result != TMC2209_OK) return result;
     HAL_Delay(5);
 
-    uint32_t chopconf = 0x10000053;
-    chopconf &= ~(0x0F << 24);
-    chopconf |= (5 << 24);
-    chopconf |= TMC2209_CHOPCONF_INTPOL;
+    // Chopper: TOFF=3, HSTRT=5, HEND=0, vsense=0 (high range), 8 microsteps + interpolation
+    uint32_t chopconf = 0;
+    chopconf |= (3 << 0);              // TOFF: off-time = 3
+    chopconf |= (5 << 4);              // HSTRT: hysteresis start = 5
+    chopconf |= (0 << 7);              // HEND: hysteresis end = 0
+    chopconf |= TMC2209_CHOPCONF_MRES_8;  // 8 microsteps
+    chopconf |= TMC2209_CHOPCONF_INTPOL;  // interpolation to 256 microsteps
     result = TMC2209_WriteRegister(TMC2209_REG_CHOPCONF, chopconf);
     if (result != TMC2209_OK) return result;
     HAL_Delay(5);
 
-    uint32_t pwmconf = 0xC10D0024;
+    // StealthChop PWM config
+    uint32_t pwmconf = 0;
+    pwmconf |= (36 << 0);              // PWM_OFS: amplitude offset = 36
+    pwmconf |= (0 << 8);               // PWM_GRAD: velocity gradient = 0
+    pwmconf |= (1 << 16);              // pwm_freq: 1 = 2/683 fCLK
+    pwmconf |= (1 << 18);              // pwm_autoscale: auto-tune amplitude
+    pwmconf |= (1 << 19);              // pwm_autograd: auto-tune gradient
+    pwmconf |= (1 << 24);              // pwm_reg: regulation bandwidth = 1
+    pwmconf |= ((uint32_t)12 << 28);   // pwm_lim: limit for PWM_GRAD auto-tuning = 12
     result = TMC2209_WriteRegister(TMC2209_REG_PWMCONF, pwmconf);
     if (result != TMC2209_OK) return result;
 
