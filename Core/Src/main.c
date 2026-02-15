@@ -103,6 +103,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   TMC2209_Init(&huart2);
+  HAL_Delay(60);
   bool tmcCommOk = TMC2209_UartProbe(false);
 
   if (tmcCommOk)

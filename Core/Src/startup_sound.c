@@ -97,7 +97,7 @@ static void PlayTone(uint16_t frequency, uint16_t duration_ms)
     }
 
     uint32_t period_us = 1000000 / frequency;
-    uint32_t cycles = (uint32_t)frequency * duration_ms / 1000;
+    uint32_t cycles = (uint32_t)frequency * duration_ms / 4000;
 
     for (uint32_t i = 0; i < cycles; i++)
     {
