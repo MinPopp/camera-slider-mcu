@@ -103,15 +103,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   TMC2209_Init(&huart2);
-  //
-  TMC2209_RegisterDump dump;
-  TMC2209_ReadAllRegisters(&dump);
+  bool tmcCommOk = TMC2209_UartProbe(false);
 
-  // while (1)
-  // {
-  //
-  // }
-  // StartupSound_Play();
+  if (tmcCommOk)
+  {
+    StartupSound_Play();
+  }
 
   Slider_Init();
   CommandParser_Init();

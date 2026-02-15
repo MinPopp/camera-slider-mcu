@@ -55,7 +55,7 @@ TMC2209_Result TMC2209_WriteRegister(uint8_t reg, uint32_t value)
         return TMC2209_ERR_COMM;
     }
 
-    HAL_Delay(TMC2209_REPLY_DELAY_MS);
+    HAL_Delay(2);
 
     return TMC2209_OK;
 }
@@ -70,6 +70,7 @@ TMC2209_Result TMC2209_ReadRegister(uint8_t reg, uint32_t* value)
     tx_buf[2] = reg & 0x7F;
     tx_buf[3] = TMC2209_CalcCRC(tx_buf, 3);
 
+    __HAL_UART_CLEAR_OREFLAG(tmc_uart);
     __HAL_UART_FLUSH_DRREGISTER(tmc_uart);
 
     HAL_StatusTypeDef status = HAL_UART_Transmit(tmc_uart, tx_buf, 4, TMC2209_TIMEOUT_MS);
@@ -78,10 +79,13 @@ TMC2209_Result TMC2209_ReadRegister(uint8_t reg, uint32_t* value)
         return TMC2209_ERR_COMM;
     }
 
-    HAL_Delay(TMC2209_REPLY_DELAY_MS);
+    HAL_HalfDuplex_EnableReceiver(tmc_uart);
 
-    uint8_t rx_buf[8];
-    status = HAL_UART_Receive(tmc_uart, rx_buf, 8, TMC2209_TIMEOUT_MS * 2);
+    uint8_t rx_buf[8] = {0};
+    status = HAL_UART_Receive(tmc_uart, rx_buf, 8, TMC2209_TIMEOUT_MS);
+
+    HAL_HalfDuplex_EnableTransmitter(tmc_uart);
+
     if (status != HAL_OK)
     {
         return TMC2209_ERR_TIMEOUT;
@@ -255,6 +259,7 @@ TMC2209_Result TMC2209_ConfigureForSound(void)
                      TMC2209_GCONF_EN_SPREADCYCLE;
     result = TMC2209_WriteRegister(TMC2209_REG_GCONF, gconf);
     if (result != TMC2209_OK) return result;
+    HAL_Delay(5);
 
     uint32_t ihold_irun = 0;
     ihold_irun |= (16 & 0x1F);
@@ -262,6 +267,7 @@ TMC2209_Result TMC2209_ConfigureForSound(void)
     ihold_irun |= ((6 & 0x0F) << 16);
     result = TMC2209_WriteRegister(TMC2209_REG_IHOLD_IRUN, ihold_irun);
     if (result != TMC2209_OK) return result;
+    HAL_Delay(5);
 
     uint32_t chopconf = 0x10000053;
     chopconf &= ~(0x0F << 24);
@@ -280,6 +286,7 @@ TMC2209_Result TMC2209_ConfigureForMotion(void)
     uint32_t gconf = TMC2209_GCONF_PDN_DISABLE | TMC2209_GCONF_MSTEP_REG_SELECT;
     result = TMC2209_WriteRegister(TMC2209_REG_GCONF, gconf);
     if (result != TMC2209_OK) return result;
+    HAL_Delay(5);
 
     uint32_t ihold_irun = 0;
     ihold_irun |= (8 & 0x1F);
@@ -287,6 +294,7 @@ TMC2209_Result TMC2209_ConfigureForMotion(void)
     ihold_irun |= ((6 & 0x0F) << 16);
     result = TMC2209_WriteRegister(TMC2209_REG_IHOLD_IRUN, ihold_irun);
     if (result != TMC2209_OK) return result;
+    HAL_Delay(5);
 
     uint32_t chopconf = 0x10000053;
     chopconf &= ~(0x0F << 24);
@@ -294,6 +302,7 @@ TMC2209_Result TMC2209_ConfigureForMotion(void)
     chopconf |= TMC2209_CHOPCONF_INTPOL;
     result = TMC2209_WriteRegister(TMC2209_REG_CHOPCONF, chopconf);
     if (result != TMC2209_OK) return result;
+    HAL_Delay(5);
 
     uint32_t pwmconf = 0xC10D0024;
     result = TMC2209_WriteRegister(TMC2209_REG_PWMCONF, pwmconf);
@@ -311,36 +320,86 @@ TMC2209_Result TMC2209_ReadAllRegisters(TMC2209_RegisterDump* dump)
 
     result = TMC2209_ReadRegister(TMC2209_REG_GCONF, &dump->gconf);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_GSTAT, &dump->gstat);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_IFCNT, &dump->ifcnt);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_IOIN, &dump->ioin);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_TSTEP, &dump->tstep);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_SG_RESULT, &dump->sg_result);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_MSCNT, &dump->mscnt);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_MSCURACT, &dump->mscuract);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_CHOPCONF, &dump->chopconf);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_DRVSTATUS, &dump->drvstatus);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
+    HAL_Delay(5);
 
     result = TMC2209_ReadRegister(TMC2209_REG_PWMCONF, &dump->pwmconf);
     if (result != TMC2209_OK) { dump->last_error = result; return result; }
 
     return TMC2209_OK;
+}
+
+bool TMC2209_UartProbe(bool testMode)
+{
+    bool success = true;
+    uint32_t value;
+    TMC2209_RegisterDump dump;
+    TMC2209_ReadAllRegisters(&dump);
+    uint32_t initialIfcnt = dump.ifcnt;
+
+
+
+    success = (TMC2209_WriteRegister(TMC2209_REG_GSTAT, 0x07) == TMC2209_OK) && success;
+    HAL_Delay(5);
+    success = (TMC2209_ReadRegister(TMC2209_REG_IOIN, &value) == TMC2209_OK) && success;
+    HAL_Delay(5);
+    success = (TMC2209_ReadRegister(TMC2209_REG_IFCNT, &value) == TMC2209_OK) && success;
+    HAL_Delay(5);
+    success = (TMC2209_ReadAllRegisters(&dump) == TMC2209_OK) && success;
+    success = success && (dump.ifcnt > initialIfcnt);
+
+    if (testMode)
+    {
+        while (1)
+        {
+            TMC2209_WriteRegister(TMC2209_REG_GSTAT, 0x07);
+            HAL_Delay(500);
+
+            TMC2209_ReadRegister(TMC2209_REG_IOIN, &value);
+            HAL_Delay(500);
+
+            TMC2209_ReadRegister(TMC2209_REG_IFCNT, &value);
+            HAL_Delay(500);
+
+            TMC2209_ReadAllRegisters(&dump);
+            HAL_Delay(1000);
+        }
+    }
+
+    return success;
 }

@@ -100,4 +100,6 @@ TMC2209_Result TMC2209_ConfigureForMotion(void);
 
 TMC2209_Result TMC2209_ReadAllRegisters(TMC2209_RegisterDump* dump);
 
+bool TMC2209_UartProbe(bool testMode);
+
 #endif
