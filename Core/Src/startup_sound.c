@@ -2,10 +2,18 @@
 #include "tmc2209.h"
 #include "stepper.h"
 #include "main.h"
-
+#define NOTE_F3  175
+#define NOTE_FS3 185
+#define NOTE_G3  196
+#define NOTE_A3  220
+#define NOTE_AS3 233   // Bb3
 #define NOTE_C4  262
 #define NOTE_D4  294
+#define NOTE_DS4 311   // Eb4
 #define NOTE_E4  330
+#define NOTE_F4  349
+#define NOTE_FS4 370
+#define NOTE_G4  392
 #define NOTE_F4  349
 #define NOTE_G4  392
 #define NOTE_A4  440
@@ -21,11 +29,63 @@ typedef struct {
 } Note;
 
 static const Note tune[] = {
-    { NOTE_E4, 150 },
-    { NOTE_G4, 150 },
-    { NOTE_C5, 150 },
+    { NOTE_G3, 350 },
     { NOTE_REST, 50 },
-    { NOTE_E5, 300 },
+    { NOTE_G3, 350 },
+    { NOTE_REST, 50 },
+    { NOTE_G3, 350 },
+    { NOTE_REST, 50 },
+    { NOTE_DS4, 250 },
+    { NOTE_REST, 50 },
+    { NOTE_AS3, 120 },
+    { NOTE_REST, 50 },
+    { NOTE_G3, 350 },
+    { NOTE_REST, 50 },
+    { NOTE_DS4, 250 },
+    { NOTE_REST, 50 },
+    { NOTE_AS3, 120 },
+    { NOTE_REST, 50 },
+    { NOTE_G3, 450 },
+    { NOTE_REST, 80 },
+
+    // { NOTE_D4, 350 },
+    // { NOTE_REST, 50 },
+    // { NOTE_D4, 350 },
+    // { NOTE_REST, 50 },
+    // { NOTE_D4, 350 },
+    // { NOTE_REST, 50 },
+    // { NOTE_DS4, 250 },
+    // { NOTE_REST, 50 },
+    // { NOTE_AS3, 120 },
+    // { NOTE_REST, 50 },
+    // { NOTE_FS3, 350 },
+    // { NOTE_REST, 50 },
+    // { NOTE_DS4, 250 },
+    // { NOTE_REST, 50 },
+    // { NOTE_AS3, 120 },
+    // { NOTE_REST, 50 },
+    // { NOTE_G3, 450 },
+    // { NOTE_REST, 80 },
+
+    // { NOTE_G4, 350 },
+    // { NOTE_REST, 50 },
+    // { NOTE_G3, 300 },
+    // { NOTE_REST, 50 },
+    // { NOTE_G3, 120 },
+    // { NOTE_REST, 40 },
+    // { NOTE_G4, 350 },
+    // { NOTE_REST, 50 },
+    // { NOTE_FS4, 250 },
+    // { NOTE_REST, 50 },
+    // { NOTE_F4, 250 },
+    // { NOTE_REST, 50 },
+    // { NOTE_E4, 250 },
+    // { NOTE_REST, 50 },
+    // { NOTE_DS4, 250 },
+    // { NOTE_REST, 50 },
+    // { NOTE_E4, 300 },
+    // { NOTE_REST, 80 },
+
 };
 
 static void PlayTone(uint16_t frequency, uint16_t duration_ms)

@@ -267,7 +267,7 @@ TMC2209_Result TMC2209_ConfigureForSound(void)
     // IRUN=10:  Irms = 11/32 * 0.18 / 0.13 * 0.707 = ~337 mA
     // IHOLD=5:  Irms =  6/32 * 0.18 / 0.13 * 0.707 = ~184 mA
     uint8_t ihold = 5;
-    uint8_t irun = 10;
+    uint8_t irun = 13;
     uint8_t iholddelay = 6;
     uint32_t ihold_irun = (ihold & 0x1F)
                         | ((irun & 0x1F) << 8)
