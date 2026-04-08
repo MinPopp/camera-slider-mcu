@@ -108,7 +108,14 @@ int main(void)
 
   if (tmcCommOk)
   {
-    StartupSound_Play();
+    if (HAL_GPIO_ReadPin(end_switch_GPIO_Port, end_switch_Pin) == GPIO_PIN_RESET)
+    {
+      StartupSound_Play();
+    }
+    else
+    {
+      TMC2209_ConfigureForMotion();
+    }
   }
 
   Slider_Init();
