@@ -118,7 +118,7 @@ Text-based commands for motion control. See `command_parser.c` for details.
 
 ### TMC2209 Interface (UART2 - 115200 baud)
 Binary protocol with CRC-8 checksums for driver configuration. The TMC2209 is configured automatically at startup with default parameters:
-- 16 microsteps
+- 8 microsteps (interpolated to 256 by TMC2209)
 - StealthChop mode (quiet operation)
 - IRUN: 20 (run current)
 - IHOLD: 8 (hold current)
@@ -134,7 +134,7 @@ Default stepper parameters (in `stepper.h`):
 - `STEPPER_MAX_SPEED`: 5000 steps/s
 
 TMC2209 defaults (in `tmc2209.c`):
-- Microsteps: 16
+- Microsteps: 8 (interpolated to 256)
 - Run current: ~1.25A (IRUN=20)
 - Hold current: ~0.5A (IHOLD=8)
 - Mode: StealthChop (quiet)

@@ -103,11 +103,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   TMC2209_Init(&huart2);
+  HAL_Delay(60);
   bool tmcCommOk = TMC2209_UartProbe(false);
 
   if (tmcCommOk)
   {
-    StartupSound_Play();
+    if (HAL_GPIO_ReadPin(end_switch_GPIO_Port, end_switch_Pin) == GPIO_PIN_RESET)
+    {
+      StartupSound_Play();
+    }
+    else
+    {
+      TMC2209_ConfigureForMotion();
+    }
   }
 
   Slider_Init();

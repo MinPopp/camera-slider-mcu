@@ -239,7 +239,7 @@ void Slider_Run()
     }
 }
 
-SliderResult Slider_SetMotionParams(uint32_t *speed, uint32_t *acceleration)
+SliderResult Slider_SetMotionParams(uint32_t* speed, uint32_t* acceleration)
 {
     osMutexWait(sliderMutexHandle, osWaitForever);
 

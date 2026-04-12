@@ -70,19 +70,19 @@ TMC2209_Result TMC2209_ReadRegister(uint8_t reg, uint32_t* value)
     tx_buf[2] = reg & 0x7F;
     tx_buf[3] = TMC2209_CalcCRC(tx_buf, 3);
 
-    __HAL_UART_CLEAR_OREFLAG(tmc_uart);
-    __HAL_UART_FLUSH_DRREGISTER(tmc_uart);
-
     HAL_StatusTypeDef status = HAL_UART_Transmit(tmc_uart, tx_buf, 4, TMC2209_TIMEOUT_MS);
     if (status != HAL_OK)
     {
         return TMC2209_ERR_COMM;
     }
 
+    __HAL_UART_CLEAR_OREFLAG(tmc_uart);
+    __HAL_UART_FLUSH_DRREGISTER(tmc_uart);
+
     HAL_HalfDuplex_EnableReceiver(tmc_uart);
 
     uint8_t rx_buf[8] = {0};
-    status = HAL_UART_Receive(tmc_uart, rx_buf, 8, TMC2209_TIMEOUT_MS);
+    status = HAL_UART_Receive(tmc_uart, rx_buf, 8, 50);
 
     HAL_HalfDuplex_EnableTransmitter(tmc_uart);
 
